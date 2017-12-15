@@ -24,6 +24,9 @@ def parse_args():
 	parser.add_argument('--input', nargs='?', default='graph/karate.edgelist',
 	                    help='Input graph path')
 
+	parser.add_argument('--format', nargs='?', default='edgelist',
+						help='Input graph format')
+
 	parser.add_argument('--output', nargs='?', default='emb/karate.emb',
 	                    help='Embeddings path')
 
@@ -59,6 +62,7 @@ def parse_args():
 	parser.add_argument('--directed', dest='directed', action='store_true',
 	                    help='Graph is (un)directed. Default is undirected.')
 	parser.add_argument('--undirected', dest='undirected', action='store_false')
+
 	parser.set_defaults(directed=False)
 
 	return parser.parse_args()
@@ -67,12 +71,16 @@ def read_graph():
 	'''
 	Reads the input network in networkx.
 	'''
-	if args.weighted:
-		G = nx.read_edgelist(args.input, nodetype=int, data=(('weight',float),), create_using=nx.DiGraph())
-	else:
-		G = nx.read_edgelist(args.input, nodetype=int, create_using=nx.DiGraph())
-		for edge in G.edges():
-			G[edge[0]][edge[1]]['weight'] = 1
+	if 'gml' == args.format:
+		G = nx.read_gml(args.input)
+	elif 'edgelist' == args.format:
+		if args.weighted:
+			G = nx.read_edgelist(args.input, nodetype=int, data=(('weight',float),), create_using=nx.DiGraph())
+		else:
+			G = nx.read_edgelist(args.input, nodetype=int, create_using=nx.DiGraph())
+
+	for edge in G.edges():
+		G[edge[0]][edge[1]]['weight'] = 1
 
 	if not args.directed:
 		G = G.to_undirected()
